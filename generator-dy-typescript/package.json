@@ -1,0 +1,12 @@
+{
+  "name": "generator-dy-typescript",
+  "version": "0.0.1",
+  "description": "",
+  "files": [
+    "app"
+  ],
+  "keywords": ["yeoman-generator"],
+  "devDependencies": {
+    "yeoman-generator": "^0.18.10"
+  }
+}
