@@ -38,8 +38,13 @@ module.exports = generators.Base.extend({
         this.mkdir(this.destinationPath("test/unit"));
 
         this.fs.copy(
-            this.templatePath("./"),
-            this.destinationPath("")
+            this.templatePath("./**"),
+            this.destinationPath(""),
+            {
+                globOptions:{
+                    dot:true
+                }
+            }
         );
         this._copyTpl(
             [
