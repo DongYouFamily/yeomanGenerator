@@ -35,6 +35,9 @@ module.exports = generators.Base.extend({
     writing: function () {
         this.mkdir(this.destinationPath("src"));
         this.mkdir(this.destinationPath("dist"));
+        this.mkdir(this.destinationPath("lib"));
+        this.mkdir(this.destinationPath("lib/external"));
+        this.mkdir(this.destinationPath("lib/inner"));
         this.mkdir(this.destinationPath("test/unit"));
 
         this.fs.copy(

@@ -19,7 +19,6 @@ module.exports = function(config) {
 
         'dist/<%= fileName %>.js',
 
-        'test/helper/jsExtend.js',
         'test/helper/jasmine/**',
         'test/helper/sinonJs/*.js',
 

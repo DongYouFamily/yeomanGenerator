@@ -2,3 +2,7 @@
 node_modules/
 bower_components/
 test/bower_components/
+src/**/*.js
+src/**/*.js.map
+src/*.js
+src/*.js.map
