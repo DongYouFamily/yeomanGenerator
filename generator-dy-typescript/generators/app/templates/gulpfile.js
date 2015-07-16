@@ -44,21 +44,74 @@ gulp.task('compileTs', function() {
 });
 
 
-gulp.task("combineInnerLib", function(done){
-    var mainFilePath = path.join(process.cwd(), "dist/<%= fileName %>.js"),
-        definitionDTsPath = path.join(process.cwd(), "src/definitions.d.ts");
+var combineDTsList = "<%= compiledDtsFile %>".split(","),
+    combineContentList = "<%= compiledContentFile %>".split(",");
+var definitionsPath = "src/definitions.d.ts";
 
-    getInnerLibDTsPathArr(definitionDTsPath).forEach(function(innerLibDtsPath){
-        fs.writeFileSync(
-            mainFilePath,
-            fs.readFileSync(innerLibDtsPath.replace("d.ts", "js"), "utf8")
-            + "\n"
-            + fs.readFileSync(mainFilePath, "utf8")
-        );
-    });
+gulp.task("combineDefinitionFile", function(done){
+    combineInnerLibDTs(
+        path.join(distPath, "<%= fileName %>.d.ts"),
+        path.join(process.cwd(), definitionsPath),
+        function(innerLibDtsPath){
+            var result = false;
+
+            combineDTsList.forEach(function(dts){
+                if(innerLibDtsPath.indexOf(dts) > -1){
+                    result = true;
+                }
+            });
+
+            return result;
+        }
+    );
 
     done();
 });
+
+gulp.task("combineContent", function(done){
+    combineInnerLibContent(
+        path.join(distPath, "<%= fileName %>.js"),
+        path.join(process.cwd(), definitionsPath),
+        function(innerLibDtsPath){
+            var result = false;
+
+            combineContentList.forEach(function(dts){
+                if(innerLibDtsPath.indexOf(dts) > -1){
+                    result = true;
+                }
+            });
+
+            return result;
+        }
+    );
+
+    done();
+});
+
+function combineInnerLibDTs(mainFilePath, definitionDTsPath, filterFunc){
+    getInnerLibDTsPathArr(definitionDTsPath)
+        .filter(filterFunc)
+        .forEach(function(innerLibDtsPath){
+            fs.writeFileSync(
+                mainFilePath,
+                fs.readFileSync(innerLibDtsPath, "utf8")
+                + "\n"
+                + fs.readFileSync(mainFilePath, "utf8")
+            );
+        });
+}
+function combineInnerLibContent(mainFilePath, definitionDTsPath, filterFunc){
+    getInnerLibDTsPathArr(definitionDTsPath)
+        .filter(filterFunc)
+        .forEach(function(innerLibDtsPath){
+            fs.writeFileSync(
+                mainFilePath,
+                fs.readFileSync(innerLibDtsPath.replace("d.ts", "js"), "utf8")
+                + "\n"
+                + fs.readFileSync(mainFilePath, "utf8")
+            );
+        });
+}
 
 function getInnerLibDTsPathArr(definitionDTsPath){
     var regex = /"[^"]+\.d\.ts"/g,
@@ -74,14 +127,19 @@ function getInnerLibDTsPathArr(definitionDTsPath){
         );
     }
 
-    return resultArr;
+    //to make finial file is build based on definitions.d.ts's sequence
+    return resultArr.reverse();
 }
 
 function parseInnerLibDTsPath(pathInDefinitionFile){
     return path.join(process.cwd(), pathInDefinitionFile.slice(3));
 }
 
-gulp.task("build", gulpSync.sync(["clean", "compileTs", "combineInnerLib"]));
+gulp.task("combineInnerLib", gulpSync.sync(["combineDefinitionFile","combineContent"]));
+
+
+//todo removeReference
+gulp.task("build", gulpSync.sync(["clean", "compileTs",  "combineInnerLib"]));
 
 
 

@@ -3,6 +3,8 @@ var generators = require('yeoman-generator');
 module.exports = generators.Base.extend({
     _fileName: null,
     _projectName: null,
+    _compiledDtsFile: null,
+    _compiledContentFile: null,
 
     _copyTpl: function (tplArr) {
         var self = this;
@@ -13,24 +15,44 @@ module.exports = generators.Base.extend({
     },
 
     prompting: function () {
-        var done = this.async();
+        var done = this.async(),
+            self = this;
+
         this.prompt({
             type: 'input',
             name: 'projectName',
             message: "what't your projectName?",
-            store:true
+            store: true
         }, function (answers) {
-            this._projectName = answers.projectName;
-            this.prompt({
+            self._projectName = answers.projectName;
+            self.prompt({
                 type: 'input',
                 name: 'fileName',
                 message: "what't your fileName?",
-                store:true
+                store: true
             }, function (answers) {
-                this._fileName = answers.fileName;
-                done();
-            }.bind(this));
-        }.bind(this));
+                self._fileName = answers.fileName;
+                self.prompt({
+                    type: 'input',
+                    name: 'compiledDtsFiles',
+                    message: "what't your lib should be compiled in dist d.ts file(use ',' to separate)?",
+                    default: "",
+                    store: true
+                }, function (answers) {
+                    self._compiledDtsFile= answers.compiledDtsFiles;
+                    self.prompt({
+                        type: 'input',
+                        name: 'compiledContentFiles',
+                        message: "what't your lib should be compiled in dist .js file(use ',' to separate)?",
+                        default: "",
+                        store: true
+                    }, function (answers) {
+                        self._compiledContentFile= answers.compiledContentFiles;
+                        done();
+                    })
+                })
+            })
+        });
     },
     writing: function () {
         this.mkdir(this.destinationPath("src"));
@@ -54,7 +76,11 @@ module.exports = generators.Base.extend({
                 {
                     sourceFile: this.templatePath("gulpfile.js"),
                     destFile: this.destinationPath("gulpfile.js"),
-                    param: {fileName: this._fileName}
+                    param: {
+                        fileName: this._fileName,
+                        compiledDtsFile: this._compiledDtsFile,
+                        compiledContentFile: this._compiledContentFile
+                    }
                 },
                 {
                     sourceFile: this.templatePath("test/karma.conf.js"),
