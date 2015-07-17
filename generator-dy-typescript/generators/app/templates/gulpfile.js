@@ -1,48 +1,61 @@
-var gulp = require('gulp');
-var gulpTs = require('gulp-typescript');
-var gulpSourcemaps = require('gulp-sourcemaps');
-var gulpConcat = require('gulp-concat');
-var del = require('del');
-var gulpSync = require('gulp-sync')(gulp);
-var merge = require('merge2');
-var path = require('path');
-var fs = require("fs");
+var gulp = require("gulp");
+var gulpTs = require("gulp-typescript");
+var gulpSourcemaps = require("gulp-sourcemaps");
+var gulpConcat = require("gulp-concat");
+var del = require("del");
+var gulpSync = require("gulp-sync")(gulp);
+var merge = require("merge2");
+var path = require("path");
+var fs = require("fs-extra");
 
 var tsFilePaths = [
-    'src/*.ts',
-    'src/**/*.ts'
+    "src/*.ts",
+    "src/**/*.ts"
 ];
 var distPath = "dist";
 
-gulp.task('clean', function() {
+gulp.task("clean", function() {
     return del.sync([distPath], {
         force: true
     });
 });
 
-gulp.task('compileTs', function() {
+gulp.task("compileTs", function() {
     var tsResult = gulp.src(tsFilePaths)
-        .pipe(gulpSourcemaps.init())
         .pipe(gulpTs({
             declarationFiles: true,
-            target: 'ES5',
+            target: "ES5",
             sortOutput:true,
-            //out: '<%= fileName %>.js'
-            typescript: require('typescript')
+            //out: "<%= fileName %>.js"
+            typescript: require("typescript")
         }));
 
 
     return  merge([
         tsResult.dts
-            .pipe(gulpConcat('<%= fileName %>.d.ts'))
+            .pipe(gulpConcat("<%= fileName %>.d.ts"))
             .pipe(gulp.dest(distPath)),
         tsResult.js
-            .pipe(gulpConcat('<%= fileName %>.js'))
-            .pipe(gulpSourcemaps.write('./'))
+            .pipe(gulpConcat("<%= fileName %>.js"))
             .pipe(gulp.dest(distPath))
     ])
 });
 
+gulp.task("compileTsDebug", function() {
+    var tsResult = gulp.src(tsFilePaths)
+        .pipe(gulpSourcemaps.init())
+        .pipe(gulpTs({
+            declarationFiles: true,
+            target: "ES5",
+            sortOutput:true,
+            typescript: require("typescript")
+        }));
+
+    return tsResult.js
+        .pipe(gulpConcat("<%= fileName %>.js"))
+        .pipe(gulpSourcemaps.write())
+        .pipe(gulp.dest(distPath));
+});
 
 var combineDTsList = "<%= compiledDtsFile %>".split(","),
     combineContentList = "<%= compiledContentFile %>".split(",");
@@ -72,21 +85,35 @@ gulp.task("combineContent", function(done){
     combineInnerLibContent(
         path.join(distPath, "<%= fileName %>.js"),
         path.join(process.cwd(), definitionsPath),
-        function(innerLibDtsPath){
-            var result = false;
-
-            combineContentList.forEach(function(dts){
-                if(innerLibDtsPath.indexOf(dts) > -1){
-                    result = true;
-                }
-            });
-
-            return result;
-        }
+        filterFunc
     );
+
+    createInnerLibJs();
 
     done();
 });
+
+function createInnerLibJs(){
+    fs.createFileSync( path.join(distPath, "<%= fileName %>.innerLib.js") );
+
+    combineInnerLibContent(
+        path.join(distPath, "<%= fileName %>.innerLib.js"),
+        path.join(process.cwd(), definitionsPath),
+        filterFunc
+    );
+}
+
+function filterFunc(innerLibDtsPath){
+    var result = false;
+
+    combineContentList.forEach(function(dts){
+        if(innerLibDtsPath.indexOf(dts) > -1){
+            result = true;
+        }
+    });
+
+    return result;
+}
 
 function combineInnerLibDTs(mainFilePath, definitionDTsPath, filterFunc){
     getInnerLibDTsPathArr(definitionDTsPath)
@@ -127,7 +154,7 @@ function getInnerLibDTsPathArr(definitionDTsPath){
         );
     }
 
-    //to make finial file is build based on definitions.d.ts's sequence
+    //to make finial file is build based on definitions.d.ts"s sequence
     return resultArr.reverse();
 }
 
@@ -139,7 +166,7 @@ gulp.task("combineInnerLib", gulpSync.sync(["combineDefinitionFile","combineCont
 
 
 //todo removeReference
-gulp.task("build", gulpSync.sync(["clean", "compileTs",  "combineInnerLib"]));
+gulp.task("build", gulpSync.sync(["clean", "compileTs", "compileTsDebug",  "combineInnerLib"]));
 
 
 
