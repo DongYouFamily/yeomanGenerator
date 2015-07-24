@@ -178,11 +178,18 @@ var karmaConfPath = path.join(process.cwd(), "test/karma.conf.js");
 
 
 
-gulp.task("test", gulpSync.sync(["build"]), function (done) {
+//gulp.task("test", gulpSync.sync(["build"]), function (done) {
+//    karma.start({
+//        configFile: karmaConfPath
+//    }, done);
+//});
+
+gulp.task("test", function (done) {
     karma.start({
         configFile: karmaConfPath
     }, done);
 });
+
 
 
 //ci test(single test)
@@ -197,9 +204,12 @@ gulp.task("singleTest", gulpSync.sync(["build"]), function (done) {
     }, done);
 });
 
-var testFilePaths = ["test/unit/*Spec.js", "test/unit/**/*Spec.js"];
+//var testFilePaths = ["test/unit/*Spec.js", "test/unit/**/*Spec.js"];
+//
+//gulp.task("watch", function(){
+//    gulp.watch(tsFilePaths.concat(testFilePaths), ["singleTest"]);
+//});
 
 gulp.task("watch", function(){
-    gulp.watch(tsFilePaths.concat(testFilePaths), ["singleTest"]);
+    gulp.watch(tsFilePaths, ["compileTsDebug"]);
 });
-
