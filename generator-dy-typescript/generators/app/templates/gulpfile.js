@@ -9,6 +9,8 @@ var path = require("path");
 var fs = require("fs-extra");
 
 var tsFilePaths = [
+    //definitions.d.ts file should be the first, otherwise the file sequence may not be the same as it in definitions.d.ts!
+    "src/definitions.d.ts",
     "src/*.ts",
     "src/**/*.ts"
 ];
